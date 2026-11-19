@@ -1,0 +1,7 @@
+out/
+work/
+*.log
+__pycache__/
+.pytest_cache/
+payload.json
+.env

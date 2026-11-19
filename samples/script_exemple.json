@@ -1,0 +1,22 @@
+{
+  "candidat": "Camille Durand",
+  "poste": "Ingénieur Data / IA (stage 6 mois)",
+  "entreprise": "Datavox Technologies",
+  "scenes": [
+    {"scene_id": 1, "titre_ecran": "Camille Durand x Datavox Technologies", "mots_cles_ecran": ["Ingénieure IA", "Stage 6 mois"],
+     "texte_voix_off": "Bonjour Datavox Technologies ! Je suis Camille Durand, élève ingénieure en intelligence artificielle, et je candidate à votre stage de six mois en ingénieur Data et IA.",
+     "faits_sources": ["stage de 6 mois, démarrage en février 2027", "élève ingénieure en dernière année, spécialité intelligence artificielle et data science"]},
+    {"scene_id": 2, "titre_ecran": "Des modèles qui mesurent leur impact", "mots_cles_ecran": ["Python", "Prévision", "-18 % d'erreur"],
+     "texte_voix_off": "Chez Optilog, j'ai développé un modèle de prévision de la demande en Python et réduit l'erreur de prévision de 18 pour cent.",
+     "faits_sources": ["développement d'un modèle de prévision de la demande en Python", "réduction de l'erreur de prévision de 18 %"]},
+    {"scene_id": 3, "titre_ecran": "Traitement de documents par OCR", "mots_cles_ecran": ["OCR", "92 % de champs reconnus"],
+     "texte_voix_off": "J'ai aussi conçu un pipeline d'extraction de factures par OCR : 92 pour cent des champs sont reconnus automatiquement, un atout pour le traitement de documents que vous recherchez.",
+     "faits_sources": ["Pipeline d'extraction de factures par OCR, 92 % des champs reconnus automatiquement", "expérience en traitement de documents, OCR, ou RAG"]},
+    {"scene_id": 4, "titre_ecran": "IA générative et travail d'équipe", "mots_cles_ecran": ["RAG", "Python", "SQL", "PyTorch"],
+     "texte_voix_off": "En équipe de quatre, j'ai construit un chatbot RAG qui indexe 1 200 documents internes. Je maîtrise Python, SQL et PyTorch, et je parle anglais couramment.",
+     "faits_sources": ["chatbot RAG pour la documentation interne, 1 200 documents indexés", "Compétences : Python, SQL, scikit-learn, PyTorch"]},
+    {"scene_id": 5, "titre_ecran": "Discutons-en", "mots_cles_ecran": ["Dès février 2027", "Échangeons"],
+     "texte_voix_off": "Disponible dès février 2027, je serais ravie d'échanger avec vous. Discutons-en ensemble, à très bientôt !",
+     "faits_sources": ["stage de fin d'études de 6 mois à partir de février 2027"]}
+  ]
+}

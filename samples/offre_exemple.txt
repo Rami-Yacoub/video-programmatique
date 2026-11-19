@@ -1,0 +1,17 @@
+ Offre - Ingénieur Data / IA (stage 6 mois) - Datavox
+                    Technologies
+
+Entreprise : Datavox Technologies, éditeur de solutions d'analyse de données pour le secteur de la
+santé.
+
+Mission : concevoir et industrialiser des modèles de machine learning et des assistants basés sur
+l'IA générative.
+
+Profil recherché : formation d'ingénieur en IA ou data science, maîtrise de Python et SQL, goût pour
+le travail en équipe.
+
+Atouts appréciés : expérience en traitement de documents, OCR, ou RAG, et capacité à mesurer
+l'impact des modèles.
+
+Contrat : stage de 6 mois, démarrage en février 2027.
+

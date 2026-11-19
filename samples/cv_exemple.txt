@@ -1,0 +1,17 @@
+              Camille Durand - Ingénieure Data / IA
+
+Profil : élève ingénieure en dernière année, spécialité intelligence artificielle et data science.
+
+Formation : Diplôme d'ingénieur en cours, école d'ingénieurs, parcours IA et Data Science
+(2024-2027).
+
+Expérience 1 : Stage de 4 mois chez Optilog, développement d'un modèle de prévision de la
+demande en Python, réduction de l'erreur de prévision de 18 %.
+
+Expérience 2 : Projet de fin d'études en équipe de 4 personnes, chatbot RAG pour la
+documentation interne, 1 200 documents indexés.
+
+Compétences : Python, SQL, scikit-learn, PyTorch, Google Apps Script, Docker, Git.
+
+Langues : Français (langue maternelle), Anglais (niveau C1), Espagnol (niveau B1).
+

@@ -1,0 +1,14 @@
+   Portfolio et lettre de motivation - Camille Durand
+
+Réalisation 1 : Tableau de bord de suivi qualité déployé pour 3 équipes, utilisé chaque semaine.
+
+Réalisation 2 : Pipeline d'extraction de factures par OCR, 92 % des champs reconnus
+automatiquement.
+
+Réalisation 3 : Concours de data science, classement dans le top 10 sur 120 équipes.
+
+Motivation : je souhaite mettre mes compétences en machine learning au service de produits
+concrets et mesurables.
+
+Disponibilité : stage de fin d'études de 6 mois à partir de février 2027.
+

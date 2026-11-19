@@ -1,0 +1,37 @@
+name: render-video
+
+# Déclenché par Apps Script (API REST repository_dispatch) après validation humaine du script.
+on:
+  repository_dispatch:
+    types: [render_video]
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      RUN_ID: ${{ github.event.client_payload.run_id }}
+      WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+      WEBHOOK_TOKEN: ${{ secrets.WEBHOOK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dépendances (FFmpeg, polices, bibliothèques Python)
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y ffmpeg fonts-dejavu-core
+          pip install -r render/requirements.txt
+      - name: Écrire le payload (script JSON validé par l'humain)
+        env:
+          PAYLOAD: ${{ toJson(github.event.client_payload) }}
+        run: printf '%s' "$PAYLOAD" > payload.json
+      - name: Rendre la vidéo
+        run: python render/render_video.py --payload payload.json --out out 2>&1 | tee render.log
+      - name: Envoyer la vidéo à la Sheet
+        run: python render/post_result.py --run-id "$RUN_ID" --out out
+      - name: Signaler l'erreur à la Sheet
+        if: failure()
+        run: |
+          MSG=$(grep -E '\[ERREUR\]|Traceback|Error' render.log 2>/dev/null | tail -n 2 | tr '\n' ' ')
+          python render/post_result.py --run-id "$RUN_ID" --error "${MSG:-Echec du rendu (voir l'onglet Actions)}"
