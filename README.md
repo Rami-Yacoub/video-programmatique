@@ -30,7 +30,7 @@ Tests : `node tests/test_lib.js` (garde-fous) et `ALLOW_TTS_FALLBACK=1 python -m
 ## Coût unitaire par vidéo
 | Brique | Coût |
 |---|---|
-| LLM Groq (palier gratuit, ~3 appels × ~4 k tokens max) | 0 € (hors palier : tarif × tokens, calculé dans `Cout_Estime_EUR` via `PRICE_IN_PER_M`/`PRICE_OUT_PER_M`) |
+| LLM Groq `openai/gpt-oss-120b` (palier gratuit, jusqu'à 3 appels × ~4 k tokens) | 0 € (hors palier : tarif × tokens, calculé dans `Cout_Estime_EUR` via `PRICE_IN_PER_M`/`PRICE_OUT_PER_M`) |
 | edge-tts, FFmpeg, Pillow | 0 € |
 | GitHub Actions (~2 min de calcul) | 0 € (palier gratuit) |
 | Drive / Apps Script / Gmail | 0 € |
