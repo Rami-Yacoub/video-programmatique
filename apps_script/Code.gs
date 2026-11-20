@@ -27,7 +27,7 @@ var PROD_HEADERS = [
 var PROMPT_HEADERS = ['ID_Prompt', 'Role_Systeme', 'Template_Prompt_User', 'Temperature', 'Model_Name'];
 var LOG_HEADERS = ['Timestamp', 'Niveau_Log', 'Etape_Workflow', 'Message_Detaille'];
 
-var DEFAULT_MODEL = 'llama-3.3-70b-versatile';
+var DEFAULT_MODEL = 'openai/gpt-oss-120b';   // llama-3.3-70b-versatile n'est plus disponible chez Groq
 var VOICE = 'fr-FR-DeniseNeural';
 
 // ------------------------------------------------------------------ menu & installation
@@ -138,12 +138,13 @@ function processRow_(sh, row) {
   setStatus_(sh, row, ST.GEN);
   try {
     var option = String(sh.getRange(row, 2).getValue() || 'B').toUpperCase();
-    var urls = sh.getRange(row, 3, 1, 3).getValues()[0];
+    var urls = readSourceRefs_(sh, row);
     var sources = urls.map(function (u, i) { return extractPdfText_(u, 'PDF ' + (i + 1)); });
     logEvent_('INFO', 'EXTRACTION', runId + ' : ' + sources.map(function (s) { return s.length; }).join('/') + ' caractères extraits');
 
     var cfg = getPrompt_('P_SCRIPT_' + option);
-    var clean = sources.map(anonymize_);
+    var LIMITS = [4500, 2500, 3500];   // limite de tokens/minute du palier gratuit Groq
+    var clean = sources.map(anonymize_).map(function (t, i) { return t.slice(0, LIMITS[i]); });
     var vars = { SOURCE_1: clean[0], SOURCE_2: clean[1], SOURCE_3: clean[2], MOTS_MIN: MIN_WORDS, MOTS_MAX: MAX_WORDS };
     var system = fillTemplate_(cfg.system, vars);
     var user = fillTemplate_(cfg.user, vars);
@@ -163,6 +164,7 @@ function processRow_(sh, row) {
       if (v.ok) { script = parsed; script.__nbMots = v.nbMots; break; }
       lastErrors = v.errors.slice(0, 6);
       logEvent_('ERROR', 'VALIDATION', runId + ' essai ' + attempt + ' : ' + v.errors.slice(0, 3).join(' | '));
+      logEvent_('INFO', 'LLM_DEBUG', runId + ' : cles=' + Object.keys(parsed).join(',') + ' ; scenes=' + (Array.isArray(parsed.scenes) ? parsed.scenes.length : typeof parsed.scenes));
     }
     if (!script) { throw new Error('Script rejeté après 3 essais : ' + lastErrors.join(' | ')); }
 
@@ -181,16 +183,49 @@ function processRow_(sh, row) {
   }
 }
 
+/** Lit les 3 sources de la ligne : URL du lien (ou de la puce intelligente Drive), à défaut le nom du fichier. */
+function readSourceRefs_(sh, row) {
+  var range = sh.getRange(row, 3, 1, 3);
+  var rich = range.getRichTextValues()[0];
+  var vals = range.getValues()[0];
+  return vals.map(function (v, i) {
+    var url = '';
+    try { url = rich[i].getLinkUrl() || ''; } catch (e) { /* pas de lien global */ }
+    if (!url) {
+      (rich[i].getRuns() || []).forEach(function (r) { if (!url && r.getLinkUrl()) { url = r.getLinkUrl(); } });
+    }
+    return url || String(v);
+  });
+}
+
+/** Identifiant Drive depuis une URL ; pour une puce Drive dont seul le nom est lisible, cherche le fichier le plus récent de ce nom. */
+function resolveFileId_(ref) {
+  var s = String(ref || '').trim();
+  if (/^https?:\/\//.test(s)) { return fileIdFromUrl_(s); }
+  var it = DriveApp.getFilesByName(s), best = null;
+  while (it.hasNext()) {
+    var f = it.next();
+    if (!best || f.getLastUpdated() > best.getLastUpdated()) { best = f; }
+  }
+  if (!best) { throw new Error('Fichier Drive introuvable : ' + s); }
+  return best.getId();
+}
+
 /** Extraction PDF robuste : conversion Drive avec OCR (gère aussi les PDF scannés). */
 function extractPdfText_(url, label) {
-  var id = fileIdFromUrl_(url);
+  var id = resolveFileId_(url);
   var file = DriveApp.getFileById(id);
   var text;
   if (file.getMimeType() === MimeType.GOOGLE_DOCS) {
     text = DocumentApp.openById(id).getBody().getText();
   } else {
-    var tmp = Drive.Files.create({ name: 'tmp_ocr_' + id, mimeType: MimeType.GOOGLE_DOCS },
-      file.getBlob(), { ocrLanguage: 'fr' });
+    var tmp = null, lastErr = null;
+    for (var k = 0; k < 3 && !tmp; k++) {   // relances : l'API Drive renvoie parfois un 502 passager
+      try {
+        tmp = Drive.Files.create({ name: 'tmp_ocr_' + id, mimeType: MimeType.GOOGLE_DOCS }, file.getBlob(), k < 2 ? { ocrLanguage: 'fr' } : {});
+      } catch (e) { lastErr = e; Utilities.sleep(3000 * (k + 1)); }
+    }
+    if (!tmp) { throw new Error(label + ' (' + file.getName() + ') : conversion Drive/OCR en echec : ' + String(lastErr && lastErr.message).replace(/\s+/g, ' ').slice(0, 120)); }
     try { text = DocumentApp.openById(tmp.id).getBody().getText(); }
     finally { Drive.Files.remove(tmp.id); }
   }
@@ -218,12 +253,13 @@ function callGroq_(system, user, temperature, model) {
     model: model, temperature: temperature, response_format: { type: 'json_object' },
     messages: [{ role: 'system', content: system }, { role: 'user', content: user }]
   };
-  for (var i = 0; i < 2; i++) {
+  if (String(model).indexOf('openai/gpt-oss') === 0) { payload.reasoning_effort = 'low'; }   // moins de tokens de raisonnement
+  for (var i = 0; i < 3; i++) {
     var r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
       headers: { Authorization: 'Bearer ' + key }, payload: JSON.stringify(payload)
     });
-    if (r.getResponseCode() === 429 && i === 0) { Utilities.sleep(8000); continue; }   // quota gratuit
+    if (r.getResponseCode() === 429 && i < 2) { Utilities.sleep(65000); continue; }   // palier gratuit : limite en tokens par minute
     if (r.getResponseCode() !== 200) { throw new Error('Groq HTTP ' + r.getResponseCode() + ' : ' + r.getContentText().slice(0, 200)); }
     var j = JSON.parse(r.getContentText());
     return { content: j.choices[0].message.content, usage: j.usage || {} };
@@ -237,7 +273,7 @@ function dispatchRender_(sh, row) {
   try {
     var script = JSON.parse(sh.getRange(row, 10).getValue());
     // Le script a pu être modifié à la main : on re-valide contre les PDF avant de rendre.
-    var urls = sh.getRange(row, 3, 1, 3).getValues()[0];
+    var urls = readSourceRefs_(sh, row);
     var clean = urls.map(function (u, i) { return anonymize_(extractPdfText_(u, 'PDF ' + (i + 1))); });
     var v = validateScript_(script, clean);
     if (!v.ok) { throw new Error('Script modifié invalide : ' + v.errors.slice(0, 3).join(' | ')); }
